@@ -13,7 +13,7 @@ class FaceRecognitionApp:
         self.root.title("Face Recognition")
         self.root.geometry("1000x700")
         
-        # Инициализация переменных
+        
         self.video_capture = None
         self.current_frame = None
         self.face_locations = []
@@ -27,36 +27,38 @@ class FaceRecognitionApp:
         self.running = False
         self.frame_counter = 0
         
-        # Создаем необходимые папки
+        
         if not os.path.exists("known_faces"):
             os.makedirs("known_faces")
         
-        # Загрузка сохраненных лиц
+        
         self.load_known_faces()
         
-        # Проверка целостности данных
+        
         if not self.verify_data_integrity():
             messagebox.showwarning("Предупреждение", "Обнаружены проблемы с данными. Рекомендуется переобучить модель.")
         
-        # Интерфейс
+        
         self.create_widgets()
         
-        # Запуск камеры
+        
         self.start_camera()
 
     def create_widgets(self):
-        # Видео-панель
+        
         self.video_frame = tk.LabelFrame(self.root, text="Видеопоток")
         self.video_frame.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
         
         self.video_label = tk.Label(self.video_frame)
         self.video_label.pack(pady=5, padx=5, fill=tk.BOTH, expand=True)
         
-        # Панель управления
+
+        
         control_frame = tk.LabelFrame(self.root, text="Управление")
         control_frame.pack(pady=10, padx=10, fill=tk.X)
         
-        # Кнопки
+
+        
         btn_add_face = tk.Button(control_frame, text="Добавить лицо", command=self.add_face)
         btn_add_face.pack(side=tk.LEFT, padx=5, pady=5)
         
@@ -81,7 +83,8 @@ class FaceRecognitionApp:
         btn_quit = tk.Button(control_frame, text="Выход", command=self.quit_app)
         btn_quit.pack(side=tk.RIGHT, padx=5, pady=5)
         
-        # Информация
+
+        
         info_frame = tk.LabelFrame(self.root, text="Статус")
         info_frame.pack(pady=10, padx=10, fill=tk.X)
         
@@ -113,12 +116,14 @@ class FaceRecognitionApp:
                 self.root.after(10, self.update_video)
                 return
                 
-            # Обрабатываем каждый 3-й кадр для оптимизации
+
+            
             self.frame_counter += 1
             if self.frame_counter % 3 == 0:
                 self.process_frame(frame)
             
-            # Обновляем GUI
+
+            
             self.update_gui()
             self.root.after(10, self.update_video)
             
@@ -129,21 +134,21 @@ class FaceRecognitionApp:
     def process_frame(self, frame):
         """Обработка и распознавание кадра"""
         try:
-            # Создаем копию кадра для обработки
+            
             frame_copy = frame.copy()
             
-            # Уменьшаем размер для обработки
+            
             small_frame = cv2.resize(frame_copy, (0, 0), fx=0.25, fy=0.25)
             rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
             
-            # Детекция лиц
+            
             if self.face_detection_enabled:
                 self.face_locations = face_recognition.face_locations(
                     rgb_small_frame,
-                    model="hog"  # Используем hog для CPU, cnn для GPU
+                    model="hog"  
                 )
                 
-                # Распознавание
+                
                 if self.recognition_enabled and self.known_face_encodings and self.face_locations:
                     self.face_encodings = face_recognition.face_encodings(
                         rgb_small_frame, 
@@ -153,15 +158,15 @@ class FaceRecognitionApp:
                     self.face_names = []
                     
                     for face_encoding in self.face_encodings:
-                        # Сравнение с известными лицами
+                       
                         face_distances = face_recognition.face_distance(
                             self.known_face_encodings, 
                             face_encoding
                         )
                         best_match_index = np.argmin(face_distances)
                         
-                        # Устанавливаем порог распознавания
-                        if face_distances[best_match_index] < 0.6:  # Можно настроить (0.5-0.6 оптимально)
+                        
+                        if face_distances[best_match_index] < 0.6:  
                             name = self.known_face_names[best_match_index]
                         else:
                             name = "Неизвестно"
@@ -170,19 +175,22 @@ class FaceRecognitionApp:
                 else:
                     self.face_names = ["Лицо"] * len(self.face_locations)
                 
-                # Отрисовка результатов
+                
                 for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
-                    # Масштабируем координаты обратно
+
+                    
                     top *= 4; right *= 4; bottom *= 4; left *= 4
                     
-                    # Рисуем прямоугольник и подпись
+
+                    
                     color = (0, 255, 0) if name != "Неизвестно" else (0, 0, 255)
                     cv2.rectangle(frame_copy, (left, top), (right, bottom), color, 2)
                     cv2.rectangle(frame_copy, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
                     font = cv2.FONT_HERSHEY_DUPLEX
                     cv2.putText(frame_copy, name, (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
             
-            # Сохраняем обработанный кадр
+
+            
             self.current_frame = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
             
         except Exception as e:
@@ -211,30 +219,30 @@ class FaceRecognitionApp:
             name = tk.simpledialog.askstring("Ввод", "Введите имя человека:")
             if name:
                 try:
-                    # Загружаем изображение и конвертируем в RGB
+
                     image = face_recognition.load_image_file(file_path)
                     
-                    # Находим все лица на изображении
+                    
                     face_locations = face_recognition.face_locations(image)
                     
                     if not face_locations:
                         messagebox.showerror("Ошибка", "На изображении не найдено лиц!")
                         return
                     
-                    # Получаем кодировки для всех найденных лиц
+                    
                     face_encodings = face_recognition.face_encodings(image, face_locations, num_jitters=3)
                     
                     if face_encodings:
-                        # Добавляем только первое найденное лицо (можно изменить для добавления всех)
+                        
                         self.known_face_encodings.append(face_encodings[0])
                         self.known_face_names.append(name)
                         
-                        # Сохраняем изображение для будущего использования
+                        
                         if not os.path.exists("known_faces"):
                             os.makedirs("known_faces")
                         cv2.imwrite(f"known_faces/{name}.jpg", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
                         
-                        # Сохраняем данные
+                        
                         self.save_known_faces()
                         
                         self.info_label.config(text=f"Известных лиц: {len(self.known_face_names)}")
