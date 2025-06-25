@@ -10,7 +10,7 @@ import numpy as np
 class FaceRecognitionApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Улучшенное распознавание лиц")
+        self.root.title("Face Recognition")
         self.root.geometry("1000x700")
         
         # Инициализация переменных
